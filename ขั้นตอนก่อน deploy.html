@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ขั้นตอนก่อน Deploy — BCM Operation App</title>
+<style>
+  :root {
+    --green: #16794a;
+    --green-light: #e8f5ee;
+    --green-dark: #0f5635;
+    --amber: #b06a00;
+    --amber-light: #fff6e6;
+    --red: #b3261e;
+    --red-light: #fdecea;
+    --ink: #1f2328;
+    --muted: #5b636b;
+    --line: #e2e6ea;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", "Sarabun", "Noto Sans Thai", Tahoma, sans-serif;
+    color: var(--ink);
+    line-height: 1.7;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px 18px 80px;
+    background: #fafbfc;
+  }
+  header.hero {
+    background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 28px 26px;
+    margin-bottom: 28px;
+  }
+  header.hero h1 { margin: 0 0 6px; font-size: 1.7rem; }
+  header.hero p { margin: 0; opacity: .92; }
+  h2 {
+    color: var(--green-dark);
+    border-bottom: 3px solid var(--green-light);
+    padding-bottom: 8px;
+    margin-top: 42px;
+    font-size: 1.35rem;
+  }
+  h3 { color: var(--green-dark); margin-top: 28px; font-size: 1.1rem; }
+  a { color: var(--green); }
+  code {
+    background: #eef1f4;
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: .9em;
+    color: #b3261e;
+  }
+  pre {
+    background: #1f2328;
+    color: #e6edf3;
+    padding: 14px 16px;
+    border-radius: 10px;
+    overflow-x: auto;
+    font-size: .88rem;
+    line-height: 1.55;
+  }
+  pre code { background: none; color: inherit; padding: 0; }
+  .step {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin: 16px 0;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px; height: 30px;
+    background: var(--green);
+    color: #fff;
+    border-radius: 50%;
+    font-weight: 700;
+    margin-right: 10px;
+    font-size: .95rem;
+  }
+  .step h3 { margin-top: 0; display: flex; align-items: center; }
+  .note, .warn, .danger, .ok {
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    border-left: 5px solid;
+  }
+  .note   { background: var(--green-light); border-color: var(--green); }
+  .warn   { background: var(--amber-light); border-color: var(--amber); }
+  .danger { background: var(--red-light);   border-color: var(--red); }
+  .ok     { background: var(--green-light); border-color: var(--green); }
+  .warn strong   { color: var(--amber); }
+  .danger strong { color: var(--red); }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; background: #fff; }
+  th, td { border: 1px solid var(--line); padding: 9px 12px; text-align: left; font-size: .92rem; }
+  th { background: var(--green-light); color: var(--green-dark); }
+  .pill {
+    display: inline-block; background: var(--green); color: #fff;
+    border-radius: 999px; padding: 1px 10px; font-size: .78rem; font-weight: 600;
+  }
+  .pill.opt { background: var(--amber); }
+  ul, ol { padding-left: 22px; }
+  .toc { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 20px; }
+  .toc ol { margin: 6px 0; }
+  footer { margin-top: 50px; color: var(--muted); font-size: .85rem; text-align: center; }
+  kbd { background:#eef1f4; border:1px solid #d0d7de; border-bottom-width:2px; border-radius:5px; padding:1px 6px; font-size:.85em; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>🛠️ ขั้นตอนก่อน Deploy</h1>
+  <p>คู่มือสำหรับผู้ที่ clone โปรเจกต์ <strong>BCM Operation App</strong> ไปใช้งานบนบัญชี Google Apps Script ของตนเอง</p>
+</header>
+
+<div class="note">
+  <strong>ภาพรวมสั้น ๆ:</strong> โปรเจกต์นี้เป็น Google Apps Script (GAS) Web App ที่ใช้ Google Spreadsheet เป็นฐานข้อมูล
+  เมื่อ clone มาแล้ว คุณต้อง <em>สร้างโปรเจกต์ Apps Script ของคุณเอง</em> แล้ว <em>รันฟังก์ชันตั้งค่า 2 ตัว</em> ก่อน deploy
+  ฐานข้อมูลและไฟล์รูปจะถูกสร้างอัตโนมัติบน Google Drive ของคุณ ไม่ต้องแก้โค้ด
+</div>
+
+<div class="toc">
+  <strong>สารบัญ</strong>
+  <ol>
+    <li><a href="#req">สิ่งที่ต้องเตรียม (Prerequisites)</a></li>
+    <li><a href="#steps">ขั้นตอนติดตั้ง (Clone → Push → Setup → Deploy)</a></li>
+    <li><a href="#functions">ฟังก์ชันที่ต้องรันก่อน deploy (สำคัญ)</a></li>
+    <li><a href="#props">Script Properties &amp; การตั้งค่าเสริม (LINE)</a></li>
+    <li><a href="#defaults">บัญชีผู้ใช้เริ่มต้น &amp; สิ่งที่ต้องเปลี่ยน</a></li>
+    <li><a href="#checklist">เช็คลิสต์ก่อน deploy</a></li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="req">1. สิ่งที่ต้องเตรียม (Prerequisites)</h2>
+<ul>
+  <li><strong>Node.js</strong> — ตรวจสอบด้วย <code>node -v</code></li>
+  <li><strong>clasp</strong> (เครื่องมือ sync โค้ด ↔ Apps Script) — ติดตั้ง: <code>npm install -g @google/clasp</code> แล้วตรวจสอบ <code>clasp --version</code></li>
+  <li><strong>บัญชี Google</strong> ที่จะเป็นเจ้าของแอป และ <strong>เปิดใช้ Apps Script API</strong> ที่
+      <a href="https://script.google.com/home/usersettings" target="_blank">script.google.com/home/usersettings</a> (เปิดสวิตช์ "Google Apps Script API")</li>
+  <li><strong>git</strong> สำหรับ clone โปรเจกต์</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="steps">2. ขั้นตอนติดตั้ง</h2>
+
+<div class="step">
+  <h3><span class="step-num">1</span> Clone โปรเจกต์</h3>
+  <pre><code>git clone &lt;URL ของ repo&gt;
+cd bcm-operation-app</code></pre>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">2</span> Login clasp ด้วยบัญชี Google ของคุณ</h3>
+  <pre><code>clasp login</code></pre>
+  <p>เบราว์เซอร์จะเปิดให้ยืนยันตัวตน เมื่อสำเร็จจะขึ้น <code>Authorization successful.</code></p>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">3</span> สร้างโปรเจกต์ Apps Script <u>ของคุณเอง</u></h3>
+  <div class="danger">
+    <strong>⚠️ สำคัญมาก:</strong> ไฟล์ <code>.clasp.json</code> ที่ติดมากับ repo มี <code>scriptId</code> ของ
+    <em>เจ้าของเดิม</em> ซึ่งคุณ <strong>ไม่มีสิทธิ์เข้าถึง</strong> — ต้องสร้างของตัวเองก่อน มิฉะนั้น <code>clasp push</code> จะ error
+  </div>
+  <p>ลบ <code>.clasp.json</code> เดิมทิ้ง แล้วสร้างใหม่:</p>
+  <pre><code># macOS / Linux
+rm .clasp.json
+clasp create --title "BCM Operation App" --rootDir .</code></pre>
+  <ul>
+    <li>ถ้าถามประเภทโปรเจกต์ ให้เลือก <strong>standalone</strong></li>
+    <li>คำสั่งนี้จะเขียน <code>.clasp.json</code> ใหม่พร้อม <code>scriptId</code> ของคุณ</li>
+  </ul>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">4</span> Push โค้ดขึ้น Apps Script</h3>
+  <pre><code>clasp push</code></pre>
+  <p>จะอัปโหลดไฟล์ <code>.gs</code>, <code>.html</code> และ <code>appsscript.json</code> (ไฟล์ <code>.md</code> และคู่มือนี้ถูกข้ามด้วย <code>.claspignore</code>)</p>
+  <div class="note">
+    <strong>Drive Advanced Service:</strong> <code>appsscript.json</code> เปิดบริการ <code>Drive v2</code> ไว้แล้ว (ใช้แปลงไฟล์ Excel ตอนอัปโหลดแบบฟอร์ม)
+    จึงถูกตั้งค่าให้อัตโนมัติเมื่อ push — ไม่ต้องเปิดเองในเมนู
+  </div>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">5</span> เปิด Editor แล้วรันฟังก์ชันตั้งค่า</h3>
+  <pre><code>clasp open</code></pre>
+  <p>ดูรายละเอียดฟังก์ชันที่ต้องรันใน <a href="#functions">หัวข้อที่ 3</a> ด้านล่าง (รัน <code>setupSampleSheets()</code> แล้วตามด้วย <code>installTriggers()</code>)</p>
+  <div class="warn">
+    <strong>ครั้งแรกจะมีหน้าจอขออนุญาต (OAuth):</strong> เนื่องจากแอปยังไม่ผ่านการตรวจสอบของ Google จะขึ้น
+    "Google hasn't verified this app" → กด <strong>Advanced → Go to BCM Operation App (unsafe) → Allow</strong>
+    ซึ่งเป็นเรื่องปกติสำหรับสคริปต์ของคุณเอง
+  </div>
+</div>
+
+<div class="step">
+  <h3><span class="step-num">6</span> Deploy เป็น Web App</h3>
+  <p><strong>วิธีที่ A — ทดสอบเร็ว (ไม่สร้าง deployment):</strong> Editor → <kbd>Deploy ▾</kbd> → <strong>Test deployments</strong> → Web app → คัดลอก URL</p>
+  <p><strong>วิธีที่ B — Deploy จริง:</strong></p>
+  <pre><code>clasp deploy --description "production"</code></pre>
+  <p>แล้วเข้า Editor → <kbd>Deploy</kbd> → <strong>Manage deployments</strong> เพื่อเอา Web app URL</p>
+  <div class="note">
+    การตั้งค่า deploy ถูกกำหนดไว้ใน <code>appsscript.json</code> แล้ว:
+    <strong>Execute as: User deploying (คุณ)</strong> และ <strong>Who has access: Anyone</strong>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="functions">3. ฟังก์ชันที่ต้องรันก่อน deploy <span class="pill">สำคัญ</span></h2>
+
+<p>เปิด Apps Script Editor → เลือกชื่อฟังก์ชันจาก dropdown ด้านบน → กด <strong>Run</strong> ตามลำดับนี้:</p>
+
+<table>
+  <thead>
+    <tr><th>ลำดับ</th><th>ฟังก์ชัน</th><th>อยู่ในไฟล์</th><th>ทำอะไร</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1️⃣</td>
+      <td><code>setupSampleSheets()</code></td>
+      <td><code>server/Setup.gs</code></td>
+      <td>
+        สร้าง Google Spreadsheet ฐานข้อมูลใหม่บน Drive ของคุณ, สร้าง 9 แท็บ (Employees, Stores, Tasks ฯลฯ),
+        ใส่ข้อมูลตัวอย่าง และ <strong>บันทึก <code>SPREADSHEET_ID</code> ลง Script Properties ให้อัตโนมัติ</strong>
+        <br><em>รันซ้ำได้ปลอดภัย</em> — จะไม่ทับข้อมูลที่มีอยู่
+      </td>
+    </tr>
+    <tr>
+      <td>2️⃣</td>
+      <td><code>installTriggers()</code></td>
+      <td><code>server/Triggers.gs</code></td>
+      <td>
+        ติดตั้ง trigger ตามเวลา 3 ตัว (timezone Asia/Bangkok):
+        <code>dailyReminder</code> (~06:00 แจ้งเตือน CM),
+        <code>checkDelayedTasks</code> (~00:30 ตรวจงานล่าช้า),
+        <code>cleanupOldData</code> (~01:00 ลบข้อมูลเก่ากว่า 30 วัน)
+        <br><em>รันซ้ำได้ปลอดภัย</em> — จะลบ trigger เดิมก่อนเสมอ ไม่ซ้ำซ้อน
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="ok">
+  <strong>✅ ตรวจผล <code>setupSampleSheets()</code>:</strong> ดู Execution log (เมนู View → Logs) จะพิมพ์ลิงก์ Spreadsheet
+  เปิดดูควรมี 9 แท็บ และแท็บ Employees มี 4 แถว (admin01, vp01, dm01, cm01)
+</div>
+<div class="ok">
+  <strong>✅ ตรวจผล <code>installTriggers()</code>:</strong> log พิมพ์ <code>Triggers installed.</code> และดูได้ที่แถบ
+  <strong>Triggers</strong> (ไอคอนนาฬิกา) ด้านซ้าย จะเห็น trigger 3 ตัว
+</div>
+
+<div class="warn">
+  <strong>📁 โฟลเดอร์รูปภาพ:</strong> ไม่ต้องสร้างเอง — โฟลเดอร์ Drive สำหรับเก็บรูป check-in
+  (<code>PHOTO_FOLDER_ID</code>) จะถูกสร้างและบันทึกอัตโนมัติเมื่อมีการ check-in พร้อมรูปครั้งแรก
+</div>
+
+<!-- ============================================================ -->
+<h2 id="props">4. Script Properties &amp; การตั้งค่าเสริม</h2>
+
+<p>ค่าลับ (secrets) ไม่ได้เก็บในโค้ด แต่เก็บใน <strong>Script Properties</strong>
+(Editor → <kbd>⚙ Project Settings</kbd> → Script Properties)</p>
+
+<table>
+  <thead>
+    <tr><th>Key</th><th>จำเป็น?</th><th>ตั้งค่าอย่างไร</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>SPREADSHEET_ID</code></td>
+      <td><span class="pill">อัตโนมัติ</span></td>
+      <td>ถูกตั้งให้เองโดย <code>setupSampleSheets()</code> — ไม่ต้องทำมือ</td>
+    </tr>
+    <tr>
+      <td><code>PHOTO_FOLDER_ID</code></td>
+      <td><span class="pill">อัตโนมัติ</span></td>
+      <td>ถูกตั้งให้เองเมื่อ check-in พร้อมรูปครั้งแรก — ไม่ต้องทำมือ</td>
+    </tr>
+    <tr>
+      <td><code>LINE_CHANNEL_TOKEN</code></td>
+      <td><span class="pill opt">เสริม</span></td>
+      <td>ใส่เองเมื่ออยากเปิดแจ้งเตือนผ่าน LINE OA (ดูด้านล่าง)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>การเปิดแจ้งเตือน LINE OA (ถ้าต้องการ)</h3>
+<p>ระบบส่งอีเมลได้ทันทีโดยไม่ต้องตั้งค่าอะไรเพิ่ม ส่วน LINE เป็น <em>ตัวเลือกเสริม</em>:</p>
+<ol>
+  <li>สร้าง <strong>LINE Official Account</strong> + Messaging API channel ที่ <a href="https://developers.line.biz/" target="_blank">LINE Developers</a></li>
+  <li>คัดลอก <strong>Channel access token</strong> มาใส่ใน Script Properties คีย์ <code>LINE_CHANNEL_TOKEN</code></li>
+  <li>ใส่ <code>line_user_id</code> ของพนักงานแต่ละคนในแท็บ <code>Employees</code> (หรือให้ผู้ใช้ผูกบัญชีเองผ่านเมนู LINE)</li>
+  <li>ตั้ง <strong>Webhook URL</strong> ของ LINE channel = Web app URL ที่ deploy ได้ (สำหรับการผูกบัญชีอัตโนมัติ)</li>
+</ol>
+<div class="note">
+  สวิตช์ <code>CONFIG.NOTIFY.LINE_ENABLED</code> ใน <code>server/Config.gs</code> เปิดอยู่แล้ว (<code>true</code>)
+  แต่ระบบจะ <strong>ไม่ส่ง LINE จนกว่าจะมี token + line_user_id</strong> ครบ — ถ้าไม่ตั้ง ก็ใช้แค่อีเมลได้ตามปกติ
+</div>
+
+<!-- ============================================================ -->
+<h2 id="defaults">5. บัญชีผู้ใช้เริ่มต้น &amp; สิ่งที่ต้องเปลี่ยน</h2>
+
+<p>หลังรัน <code>setupSampleSheets()</code> จะมีบัญชีตัวอย่าง 4 บัญชี รหัสผ่านเริ่มต้นเหมือนกันหมดคือ
+   <code>changeme123</code>:</p>
+
+<table>
+  <thead><tr><th>Employee ID</th><th>ตำแหน่ง</th><th>รหัสผ่านเริ่มต้น</th></tr></thead>
+  <tbody>
+    <tr><td><code>admin01</code></td><td>admin</td><td><code>changeme123</code></td></tr>
+    <tr><td><code>vp01</code></td><td>vice president</td><td><code>changeme123</code></td></tr>
+    <tr><td><code>dm01</code></td><td>district manager</td><td><code>changeme123</code></td></tr>
+    <tr><td><code>cm01</code></td><td>cluster manager</td><td><code>changeme123</code></td></tr>
+  </tbody>
+</table>
+
+<div class="danger">
+  <strong>⚠️ ก่อนใช้งานจริง ต้อง:</strong>
+  <ul>
+    <li><strong>เปลี่ยนรหัสผ่าน</strong>ทุกบัญชี (รหัสผ่านเก็บเป็น plaintext ในแท็บ Employees ตามดีไซน์ — admin แก้ในชีตได้โดยตรง หรือผ่านเมนู "จัดการฐานข้อมูล")</li>
+    <li><strong>ลบ/แก้ข้อมูลตัวอย่าง</strong> (ร้าน, งาน) แล้วใส่ข้อมูลจริงขององค์กร โดยเฉพาะ <strong>พิกัด latitude/longitude ของร้าน</strong> ที่ใช้ตรวจ GPS ตอน check-in</li>
+    <li>อัปโหลดแบบฟอร์มตรวจร้าน (.xlsx) จริงผ่านเมนู "อัปโหลดแบบฟอร์ม"</li>
+  </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="checklist">6. เช็คลิสต์ก่อน Deploy</h2>
+<table>
+  <tbody>
+    <tr><td>☐</td><td>ติดตั้ง Node.js + clasp และเปิด Apps Script API แล้ว</td></tr>
+    <tr><td>☐</td><td><code>clasp login</code> ด้วยบัญชีของตัวเอง</td></tr>
+    <tr><td>☐</td><td>ลบ <code>.clasp.json</code> เดิม แล้ว <code>clasp create</code> สร้างโปรเจกต์ใหม่</td></tr>
+    <tr><td>☐</td><td><code>clasp push</code> สำเร็จ (เห็นไฟล์ครบใน Editor)</td></tr>
+    <tr><td>☐</td><td>รัน <code>setupSampleSheets()</code> (<code>server/Setup.gs</code>) — มี Spreadsheet + 9 แท็บ</td></tr>
+    <tr><td>☐</td><td>รัน <code>installTriggers()</code> (<code>server/Triggers.gs</code>) — เห็น trigger 3 ตัว</td></tr>
+    <tr><td>☐</td><td>(เสริม) ตั้ง <code>LINE_CHANNEL_TOKEN</code> ถ้าจะใช้ LINE</td></tr>
+    <tr><td>☐</td><td>Deploy เป็น Web App แล้วเปิด URL เห็นหน้า login</td></tr>
+    <tr><td>☐</td><td>เปลี่ยนรหัสผ่านเริ่มต้น + ใส่ข้อมูลจริง</td></tr>
+  </tbody>
+</table>
+
+<div class="ok">
+  <strong>เสร็จแล้ว!</strong> เปิด Web app URL จะเห็นหน้า login — ลองเข้าด้วย <code>cm01 / changeme123</code> เพื่อทดสอบ
+  (ดูรายละเอียดการใช้งานแต่ละหน้าได้ในไฟล์ <code>คู่มือการใช้งาน.md</code>)
+</div>
+
+<footer>
+  BCM Operation App · เอกสารนี้อ้างอิงจาก SETUP.md, ARCHITECTURE.md และ Config.gs ในโปรเจกต์
+</footer>
+
+</body>
+</html>
